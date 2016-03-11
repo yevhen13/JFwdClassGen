@@ -1,4 +1,4 @@
-package jdecogen;
+package jfwdclassgen;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -17,10 +17,10 @@ import javax.tools.Diagnostic.Kind;
 
 import com.squareup.javapoet.JavaFile;
 
-public final class DgProcessor extends AbstractProcessor {
+public final class FcProcessor extends AbstractProcessor {
   @Override
   public Set<String> getSupportedAnnotationTypes() {
-    return Collections.singleton(Decorator.class.getName());
+    return Collections.singleton(ForwardingClass.class.getName());
   }
 
   @Override
@@ -28,15 +28,15 @@ public final class DgProcessor extends AbstractProcessor {
     return SourceVersion.latestSupported();
   }
 
-  private void processElement(final DgTypeElement typeElement) throws IOException {
-    JavaFile.builder(typeElement.getPackageName(), new DgClassFactory(typeElement, this.processingEnv.getTypeUtils()).createDecoratorClass())
+  private void processElement(final FcTypeElement typeElement) throws IOException {
+    JavaFile.builder(typeElement.getPackageName(), new FcClassFactory(typeElement, this.processingEnv.getTypeUtils()).createForwardingClass())
       .build()
       .writeTo(this.processingEnv.getFiler());
   }
 
   private void requireInterface(final TypeElement typeElement) throws IOException {
     if (typeElement.getKind() != ElementKind.INTERFACE) {
-      throw new IOException(String.format("Annotation %s is only supported for interfaces.", Decorator.class.getName()));
+      throw new IOException(String.format("Annotation %s is only supported for interfaces.", ForwardingClass.class.getName()));
     }
   }
 
@@ -54,10 +54,10 @@ public final class DgProcessor extends AbstractProcessor {
 
   @Override
   public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-    DgProcessor.getTypes(roundEnv.getElementsAnnotatedWith(Decorator.class)).forEach(typeElement -> {
+    FcProcessor.getTypes(roundEnv.getElementsAnnotatedWith(ForwardingClass.class)).forEach(typeElement -> {
       try {
         this.requireInterface(typeElement);
-        this.processElement(new DgTypeElement(typeElement));
+        this.processElement(new FcTypeElement(typeElement));
       } catch (final IOException e) {
         this.processingEnv.getMessager().printMessage(Kind.ERROR, e.getMessage(), typeElement);
       }

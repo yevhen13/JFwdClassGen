@@ -1,4 +1,4 @@
-package jdecogen;
+package jfwdclassgen;
 
 import java.io.IOException;
 import java.util.stream.Stream;
@@ -11,13 +11,13 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
 
-final class DgTypeElement {
+final class FcTypeElement {
   private final TypeElement typeElement;
-  private final DgOptions options;
+  private final FcOptions options;
 
-  public DgTypeElement(final TypeElement typeElement) throws IOException {
+  public FcTypeElement(final TypeElement typeElement) throws IOException {
     this.typeElement = typeElement;
-    this.options = new DgOptions(this.typeElement.getAnnotation(Decorator.class));
+    this.options = new FcOptions(this.typeElement.getAnnotation(ForwardingClass.class));
   }
 
   public TypeMirror asType() {
@@ -39,11 +39,11 @@ final class DgTypeElement {
     return this.typeElement.getSimpleName().toString();
   }
 
-  public String getDecoratorClassName() {
-    return this.options.applyNaming(this.getClassName());
+  public String getForwardingClassName() {
+    return this.options.getNewClassName(this.getClassName());
   }
 
-  public DgStyle getStyle() {
+  public FcStyle getStyle() {
     return this.options.getStyle();
   }
 
@@ -56,7 +56,7 @@ final class DgTypeElement {
   }
 
   private Stream<ExecutableElement> getDeclaredMethods() {
-    return DgTypeElement.getDeclaredMethods(this.typeElement);
+    return FcTypeElement.getDeclaredMethods(this.typeElement);
   }
 
   private static Stream<TypeElement> getSuperInterfaces(final TypeElement typeElement, final Types typeUtils) {
@@ -72,7 +72,7 @@ final class DgTypeElement {
   }
 
   private Stream<ExecutableElement> getInheritedMethods(final Types typeUtils) {
-    return this.getSuperInterfaces(typeUtils).flatMap(DgTypeElement::getDeclaredMethods);
+    return this.getSuperInterfaces(typeUtils).flatMap(FcTypeElement::getDeclaredMethods);
   }
 
   public Stream<ExecutableElement> getMethods(final Types typeUtils) {

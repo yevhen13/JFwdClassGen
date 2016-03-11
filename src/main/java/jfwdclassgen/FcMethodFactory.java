@@ -1,4 +1,4 @@
-package jdecogen;
+package jfwdclassgen;
 
 import static java.util.Objects.requireNonNull;
 
@@ -15,18 +15,18 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 
-final class DgMethodFactory {
-  private final DgStyle style;
+final class FcMethodFactory {
+  private final FcStyle style;
   private final MethodSpec delegateMethod;
 
-  public DgMethodFactory(final TypeMirror baseType, final DgStyle style) {
+  public FcMethodFactory(final TypeMirror baseType, final FcStyle style) {
     this.style = requireNonNull(style);
     this.delegateMethod = this.createDelegateMethod(baseType);
   }
 
   private final MethodSpec createDelegateMethod(final TypeMirror returnType) {
     final MethodSpec.Builder code = MethodSpec.methodBuilder("delegate");
-    if (this.style == DgStyle.INTERFACE) {
+    if (this.style == FcStyle.INTERFACE) {
       code.addModifiers(Modifier.PUBLIC);
     } else {
       code.addModifiers(Modifier.PROTECTED);
@@ -40,8 +40,8 @@ final class DgMethodFactory {
     return this.delegateMethod;
   }
 
-  private void appendParameters(final CodeBlock.Builder code, final Collection<? extends VariableElement> parameterElements) {
-    final Iterator<? extends VariableElement> it = parameterElements.iterator();
+  private void appendMethodArguments(final CodeBlock.Builder code, final Collection<? extends VariableElement> argumentElements) {
+    final Iterator<? extends VariableElement> it = argumentElements.iterator();
     while (it.hasNext()) {
       final VariableElement parameterElement = it.next();
       String parameterFormat = "$N";
@@ -52,7 +52,7 @@ final class DgMethodFactory {
     }
   }
 
-  private CodeBlock decorationCall(final ExecutableElement methodElement) {
+  private CodeBlock forwardingCall(final ExecutableElement methodElement) {
     final String methodName = methodElement.getSimpleName().toString();
     final CodeBlock.Builder code = CodeBlock.builder();
     code.add("$[");
@@ -60,17 +60,17 @@ final class DgMethodFactory {
       code.add("return ");
     }
     code.add("$N().$N(", this.delegateMethod, methodName);
-    this.appendParameters(code, methodElement.getParameters());
+    this.appendMethodArguments(code, methodElement.getParameters());
     code.add(");\n$]");
     return code.build();
   }
 
-  public MethodSpec decorate(final ExecutableElement methodElement) {
+  public MethodSpec forwardingMethod(final ExecutableElement methodElement) {
     final MethodSpec.Builder code = MethodSpec.overriding(methodElement);
-    if (this.style == DgStyle.INTERFACE) {
+    if (this.style == FcStyle.INTERFACE) {
       code.addModifiers(Modifier.DEFAULT);
     }
-    code.addCode(this.decorationCall(methodElement));
+    code.addCode(this.forwardingCall(methodElement));
     return code.build();
   }
 }
