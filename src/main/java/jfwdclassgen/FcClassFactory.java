@@ -1,4 +1,4 @@
-package jdecogen;
+package jfwdclassgen;
 
 import static java.util.Objects.requireNonNull;
 
@@ -8,26 +8,26 @@ import javax.lang.model.util.Types;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
-final class DgClassFactory {
-  private final DgTypeElement element;
+final class FcClassFactory {
+  private final FcTypeElement element;
   private final Types typeUtils;
 
-  private final DgMethodFactory methodFactory;
+  private final FcMethodFactory methodFactory;
 
-  public DgClassFactory(final DgTypeElement element, final Types typeUtils) {
+  public FcClassFactory(final FcTypeElement element, final Types typeUtils) {
     this.element = requireNonNull(element);
     this.typeUtils = requireNonNull(typeUtils);
-    this.methodFactory = new DgMethodFactory(element.asType(), element.getStyle());
+    this.methodFactory = new FcMethodFactory(element.asType(), element.getStyle());
   }
 
-  private void appendDelegationMethods(final DgStyle style, final TypeSpec.Builder decoratorClass) {
+  private void appendForwardingMethods(final FcStyle style, final TypeSpec.Builder decoratorClass) {
     decoratorClass.addMethod(this.methodFactory.getDelegateMethod());
-    this.element.getMethods(this.typeUtils).forEach(method -> decoratorClass.addMethod(this.methodFactory.decorate(method)));
+    this.element.getMethods(this.typeUtils).forEach(method -> decoratorClass.addMethod(this.methodFactory.forwardingMethod(method)));
   }
 
-  public TypeSpec createDecoratorClass() {
-    final DgStyle style = this.element.getStyle();
-    final String className = this.element.getDecoratorClassName();
+  public TypeSpec createForwardingClass() {
+    final FcStyle style = this.element.getStyle();
+    final String className = this.element.getForwardingClassName();
     final TypeSpec.Builder decoratorClass;
     switch (style) {
       case INTERFACE:
@@ -44,7 +44,7 @@ final class DgClassFactory {
       decoratorClass.addModifiers(Modifier.PUBLIC);
     }
     decoratorClass.addSuperinterface(TypeName.get(this.element.asType()));
-    this.appendDelegationMethods(style, decoratorClass);
+    this.appendForwardingMethods(style, decoratorClass);
     return decoratorClass.build();
   }
 }
