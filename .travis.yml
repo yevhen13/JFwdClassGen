@@ -1,0 +1,7 @@
+language: java
+sudo: false
+env:
+  global:
+    - JAVA_OPTS="-Xmx256m -Dfile.encoding=UTF-8"
+jdk:
+  - oraclejdk8
