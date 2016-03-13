@@ -35,6 +35,7 @@ final class FcClassFactory {
         decoratorClass.addAnnotation(FunctionalInterface.class);
         break;
       default:
+      case CONSTRUCTOR:
       case ABSTRACT_CLASS:
         decoratorClass = TypeSpec.classBuilder(className);
         decoratorClass.addModifiers(Modifier.ABSTRACT);

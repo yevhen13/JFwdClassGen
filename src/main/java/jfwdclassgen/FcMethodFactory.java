@@ -25,15 +25,15 @@ final class FcMethodFactory {
   }
 
   private final MethodSpec createDelegateMethod(final TypeMirror returnType) {
-    final MethodSpec.Builder code = MethodSpec.methodBuilder("delegate");
-    if (this.style == FcStyle.INTERFACE) {
-      code.addModifiers(Modifier.PUBLIC);
-    } else {
-      code.addModifiers(Modifier.PROTECTED);
+    switch (this.style) {
+      default:
+      case ABSTRACT_CLASS:
+        return MethodSpec.methodBuilder("delegate").addModifiers(Modifier.PROTECTED, Modifier.ABSTRACT).returns(TypeName.get(returnType)).build();
+      case INTERFACE:
+        return MethodSpec.methodBuilder("delegate").addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT).returns(TypeName.get(returnType)).build();
+      case CONSTRUCTOR:
+        return MethodSpec.constructorBuilder().addModifiers(Modifier.PROTECTED).build();
     }
-    code.addModifiers(Modifier.ABSTRACT);
-    code.returns(TypeName.get(returnType));
-    return code.build();
   }
 
   public MethodSpec getDelegateMethod() {
