@@ -28,40 +28,56 @@ public final class FcProcessor extends AbstractProcessor {
     return SourceVersion.latestSupported();
   }
 
-  private void processElement(final FcTypeElement typeElement) throws IOException {
-    JavaFile.builder(typeElement.getPackageName(), new FcClassFactory(typeElement, this.processingEnv.getTypeUtils()).createForwardingClass())
-      .build()
-      .writeTo(this.processingEnv.getFiler());
+  private void processElement(final FcTypeElement typeElement)
+      throws IOException {
+    JavaFile.builder(typeElement.getPackageName(),
+        typeElement.getStyle()
+                   .createFactory(typeElement)
+                   .createForwardingClass())
+            .build()
+            .writeTo(this.processingEnv.getFiler());
   }
 
-  private void requireInterface(final TypeElement typeElement) throws IOException {
+  private void requireInterface(final TypeElement typeElement)
+      throws IOException {
     if (typeElement.getKind() != ElementKind.INTERFACE) {
-      throw new IOException(String.format("Annotation %s is only supported for interfaces.", ForwardingClass.class.getName()));
+      throw new IOException(
+          String.format("Annotation %s is only supported for interfaces.",
+              ForwardingClass.class.getName()));
     }
   }
 
-  public static <T> Optional<T> castAs(final Class<T> type, final Object value) {
-    return type.isInstance(value) ? Optional.of(type.cast(value)) : Optional.empty();
+  public static <T> Optional<T> castAs(final Class<T> type,
+      final Object value) {
+    return type.isInstance(value) ? Optional.of(type.cast(value))
+        : Optional.empty();
   }
 
   public static <T> Stream<T> toStream(final Optional<T> value) {
     return value.isPresent() ? Stream.of(value.get()) : Stream.empty();
   }
 
-  private static Stream<TypeElement> getTypes(final Collection<? extends Element> elements) {
-    return elements.stream().map(it -> castAs(TypeElement.class, it)).flatMap(it -> toStream(it));
+  private static Stream<TypeElement> getTypes(
+      final Collection<? extends Element> elements) {
+    return elements.stream().map(it -> castAs(TypeElement.class, it)).flatMap(
+        it -> toStream(it));
   }
 
   @Override
-  public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-    FcProcessor.getTypes(roundEnv.getElementsAnnotatedWith(ForwardingClass.class)).forEach(typeElement -> {
-      try {
-        this.requireInterface(typeElement);
-        this.processElement(new FcTypeElement(typeElement));
-      } catch (final IOException e) {
-        this.processingEnv.getMessager().printMessage(Kind.ERROR, e.getMessage(), typeElement);
-      }
-    });
+  public boolean process(final Set<? extends TypeElement> annotations,
+      final RoundEnvironment roundEnv) {
+    FcProcessor.getTypes(
+        roundEnv.getElementsAnnotatedWith(ForwardingClass.class))
+               .forEach(typeElement -> {
+                 try {
+                   requireInterface(typeElement);
+                   processElement(new FcTypeElement(
+                       this.processingEnv.getTypeUtils(), typeElement));
+                 } catch (final IOException e) {
+                   this.processingEnv.getMessager().printMessage(Kind.ERROR,
+                       e.getMessage(), typeElement);
+                 }
+               });
     return true;
   }
 }
